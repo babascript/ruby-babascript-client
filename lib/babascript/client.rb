@@ -18,18 +18,13 @@ module Babascript
       @flag = false
       this = self
       @linda.io.on :connect do
-        this.next
+        this.next_task
         this.broadcast
         this.unicast
       end
-      while !@flag do
-        if !@flag
-          sleep 1
-        end
-      end
     end
 
-    def next
+    def next_task
       if @tasks.length > 0
         task = @tasks[0]
         emit :get_task, task
@@ -41,9 +36,7 @@ module Babascript
         }
         this = self
         @ts.take tuple do |err, tuple|
-          ap tuple
-          ap get_task
-          this.get_task err, tuple
+          get_task err, tuple
         end
       end
     end
@@ -56,6 +49,20 @@ module Babascript
       @ts.read tuple do |err, tuple|
         get_task err, tuple
         @group.watch tuple do |err, tuple|
+          get_task err, tuple
+        end
+      end
+    end
+
+    def unicast
+      tuple = {
+        :baba => "script",
+        :type => "unicast",
+        :unicast => @id
+      }
+      @ts.read tuple do |err, tuple|
+        get_task err, tuple
+        @ts.watch tuple do |err, tuple|
           get_task err, tuple
         end
       end
@@ -74,15 +81,16 @@ module Babascript
         :_task => task
       }
       @ts.write tuple
-      @next
+      next_task
     end
 
     def get_task(err, tuple)
       if err
         return err
       end
+      ap tuple.data
       @tasks.push tuple.data
-      # @emit :get_  task, tuple.data
+      emit :get_task, tuple.data
     end
 
     def get_id

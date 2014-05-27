@@ -3,8 +3,15 @@ require 'babascript/client'
 require "awesome_print"
 
 client = Babascript::Client.new "baba", {:linda => "http://localhost:3030"}
-client.on :get_task do |err, tuple|
-  puts err
-  puts tuple
-  client.close
+
+flag = false
+client.on :get_task do |data|
+  puts data[:key]
+  client.return_value true
+  flag = true
+end
+
+loop do
+  sleep 1
+  break if flag
 end
