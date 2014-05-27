@@ -88,9 +88,30 @@ module Babascript
       if err
         return err
       end
-      ap tuple.data
       @tasks.push tuple.data
       emit :get_task, tuple.data
+    end
+
+    def receiveCancel
+      tuple = {
+        :baba => "script",
+        :type => "cancel"
+      }
+      @ts.watch tuple do |err, tuple|
+        for task in @tasks
+          if task.cid == tuple.cid
+            if task == @tasks[0]
+              emit :cancel_task, task
+              next_task
+            end
+            @tasks.remove task
+          end
+        end
+      end
+    end
+
+    def cancel
+
     end
 
     def get_id
